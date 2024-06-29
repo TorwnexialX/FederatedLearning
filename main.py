@@ -20,14 +20,17 @@ accuracy_list = []
 
 # initialize the process bar
 with tqdm(range(args.rounds)) as global_bar:
-    global_bar.set_description("Global Training")
+    global_bar.colour = "blue"
     for epoch in global_bar:
+        global_bar.set_description(f"Global Round {epoch}")
         m = int(max(args.C * args.K, 1))
         S = random.sample(range(args.K), m)
         local_state_dict = []
         local_loss = []
 
         with tqdm(total=len(S)) as local_bar:
+            local_bar.colour = "red"
+            local_bar.leave = False
             local_bar.set_description("Local Training")
             for k in S:
                 # ClientUpdate
@@ -36,7 +39,7 @@ with tqdm(range(args.rounds)) as global_bar:
                 local_state_dict.append(client_state_dict)
                 local_loss.append(client_loss)
                 local_bar.update(1)
-        print("\r")
+            local_bar.close()
 
         # param average
         avg_state_dict = param_average(local_state_dict)
@@ -45,7 +48,9 @@ with tqdm(range(args.rounds)) as global_bar:
         # evaluation
         train_loss = np.mean(local_loss)
         test_loss, accuracy = evaluate(global_model, test_dataset, args.device)
-        print(f'\n accuracy: {accuracy * 100}% \n', 
-            f'train_loss: {train_loss} \n',
-            f'test_loss: {test_loss}')
+        printout = f'Global Round: {epoch}\n'\
+            f'accuracy: {accuracy * 100}% \n'\
+            f'train_loss: {train_loss} \n'\
+            f'test_loss: {test_loss}'
+        global_bar.write(printout)
     

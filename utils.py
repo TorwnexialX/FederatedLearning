@@ -43,7 +43,7 @@ def get_dataset(if_iid:bool):
         # shuffle shards and distribute them to 100 clients each 2
         idxs = idxs.reshape([num_shards, num_imgs])
         np.random.shuffle(idxs)
-        idxs.reshape([num_clients, -1])
+        idxs = idxs.reshape([num_clients, -1])
 
     return idxs, train_dataset, test_dataset
 
