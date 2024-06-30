@@ -7,24 +7,30 @@ from settings import *
 args = args_parser()
 
 # initialize dataset
-idxs, train_dataset, test_dataset = get_dataset(if_iid=args.if_iid)
+idxs, train_dataset, test_dataset = get_dataset(if_iid=args.if_iid, num_clients=args.K)
 
 # initialize global model
 global_model = MNIST_2NN()
 global_model.to(args.device)
 global_model.train()
 
+# initialize lists of results
 train_loss_list = []
 test_loss_list = []
 accuracy_list = []
 
-# initialize the process bar
 with tqdm(range(args.rounds)) as global_bar:
     global_bar.colour = "blue"
+
+    # global training
     for epoch in global_bar:
-        global_bar.set_description(f"Global Round {epoch}")
+        global_bar.set_description(f"Global Round {epoch + 1}")
+
+        # select clients subset
         m = int(max(args.C * args.K, 1))
         S = random.sample(range(args.K), m)
+
+        # lists to store local parameters and losses
         local_state_dict = []
         local_loss = []
 

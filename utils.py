@@ -5,20 +5,25 @@ import torch
 from models import MNIST_2NN
 import copy
 
-def get_dataset(if_iid:bool):
+def get_dataset(if_iid:bool, num_clients):
     """
-    :param if_iid: train_dataset will be distributed I.I.D when True, not when False.
-    :return idxs: indices of examples distributed to each client
-    :return train_dataset: MNIST training dataset. 
-    :return test_dataset: MNIST test dataset. 
+    Given the distribution type, then returns the dataset. 
+
+    Args:
+        if_iid: train_dataset will be distributed I.I.D when True, not when False.
+    
+    Returns:
+        idxs: indices of examples distributed to each client
+        train_dataset: MNIST training dataset. 
+        test_dataset: MNIST test dataset. 
     """
     data_dir = 'data/'
-    num_clients = 100
-    transform = transforms.Compose([transforms.ToTensor(),
-                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
+    num_clients = int(num_clients)
+
+    # introduce negative numbers through normalization
+    transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5), (0.5))])
 
     train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transform)
-
     test_dataset  = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
 
     if if_iid == True:
@@ -30,7 +35,7 @@ def get_dataset(if_iid:bool):
         idxs = idxs.reshape([num_clients, -1])
 
     if if_iid == False:
-        # 60,000 training imgs -->  200 imgs/shard X 300 shards
+        # distribute 60,000 images to 300 shards, each 200 images
         num_shards, num_imgs = 200, 300
         idxs = np.arange(num_shards*num_imgs)
         labels = train_dataset.train_labels.numpy()
@@ -49,24 +54,28 @@ def get_dataset(if_iid:bool):
 
 class Client:
     def __init__(self, global_model, args):
-        self.global_model = global_model
-        self.lr = args.lr
-        self.B = args.B
-        self.E = args.E
-        self.device = args.device
+        self.global_model = global_model  # global model from server
+        self.lr = args.lr                 # learning rate
+        self.B = args.B                   # batch size
+        self.E = args.E                   # local epochs
+        self.device = args.device         # device
 
     def update(self, global_trainset, idxs, k):
         """
-        :param global_trainset: the entire training set
-        :param idxs: indices of examples distributed to each client
-        :param k: index of current client
-        :return: locally updated weight and final loss
+        update the model parameters locally
+
+        Args:
+            global_trainset: the entire training set
+            idxs: indices of examples distributed to each client
+            k: index of current client
+        
+        Returns:
+            locally updated weight and final loss
         """
         model = MNIST_2NN().to(self.device)
         criterion = torch.nn.CrossEntropyLoss()
         trainset = Subset(global_trainset, idxs[k])
         trainloader = DataLoader(trainset, batch_size=self.B, shuffle=True)
-        batch_num = len(trainloader)
         
         model.load_state_dict(self.global_model.state_dict())
         # optimizer customization
@@ -84,63 +93,62 @@ class Client:
         return model.state_dict(), loss.item()
 
 def param_average(dict_list):
+    """
+    Given state_dicts of clients, then averages the parameters. 
+
+    Args:
+        dict_list: list of state_dicts from clients
+
+    Returns:
+        new_dict: the state_dict whose parameters are the averaged ones
+    """
     # Initialize the new dictionary with the same structure as the input dictionaries
     new_dict = copy.deepcopy(dict_list[0])
-    list_len = len(dict_list)
     
-    # Iterate over each key in the dictionary
     for key in new_dict.keys():
-        # Stack all tensors along a new dimension and calculate the mean
+        # calculate the mean of each key by stacking the key values and then taking the average
         stacked_tensors = torch.stack([d[key] for d in dict_list], dim=0)
         mean_tensor = torch.mean(stacked_tensors, dim=0)
-        
-        # Assign the mean tensor to the new dictionary
         new_dict[key] = mean_tensor
     
     return new_dict
 
-def load_params(global_dict, avg_weights, avg_biases):
-    """
-    :param global_dict: state_dict() of global model
-    :avg_weights: averaged weights np.array
-    :avg_biases: averaged biases np.array
-    """
-    for i, key in enumerate(global_dict.keys()):
-        if i % 2 == 0:
-            global_dict[key] = avg_weights[int(i/2)]
-        else:
-            global_dict[key] = avg_biases[int(i/2)]
-
 def evaluate(global_model, global_testset, device):
     """
-    :param global_model: the global model
-    :param global_testset: the entire test set
-    :param device: the device (CPU or GPU) to run the evaluation on
-    :return avg_loss: average loss
-    :return accuracy: accuracy over the test set
-    """
-    criterion = torch.nn.CrossEntropyLoss()
-    testloader = DataLoader(global_testset, batch_size=64, shuffle=False)
+    Evaluate the global model on the entire test set. 
+
+    Args:
+        global_model: the global model
+        global_testset: the entire test set
+        device: the device (CPU or GPU) to run the evaluation on
     
+    Returns:
+        avg_loss: average loss
+        accuracy: accuracy over the test set
+    """
+    testloader = DataLoader(global_testset, batch_size=64, shuffle=False)
     global_model.eval()
     
+    # initialize loss function, total loss, and correct prediction counter
+    criterion = torch.nn.CrossEntropyLoss()
     total_loss = 0.0
     correct = 0
-    total = 0
     
     with torch.no_grad():
         for features, labels in testloader:
             features, labels = features.to(device), labels.to(device)
             outputs = global_model(features)
 
+            # add the test loss
             loss = criterion(outputs, labels)
             total_loss += loss.item()
             
+            # count the correct prediction in the current batch
             _, predicted = torch.max(outputs.data, 1)
-            total += labels.size(0)
             correct += (predicted == labels).sum().item()
     
+    # calculate average loss and accuracy
     avg_loss = total_loss / len(testloader)
-    accuracy = correct / total
+    accuracy = correct / len(testloader)
     
     return avg_loss, accuracy
