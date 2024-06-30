@@ -1,5 +1,6 @@
 from tqdm import tqdm
 import random
+import pickle
 from utils import *
 from models import *
 from settings import *
@@ -54,6 +55,11 @@ with tqdm(range(args.rounds)) as global_bar:
         # evaluation
         train_loss = np.mean(local_loss)
         test_loss, accuracy = evaluate(global_model, test_dataset, args.device)
+        train_loss_list.append(train_loss)
+        test_loss_list.append(test_loss)
+        accuracy_list.append(accuracy)
+
+        # print results after each round
         printout = \
             f'Global Round: {epoch + 1}\n'\
             f'accuracy: {accuracy * 100}% \n'\
@@ -61,3 +67,5 @@ with tqdm(range(args.rounds)) as global_bar:
             f'test_loss: {test_loss}'
         global_bar.write(printout)
     
+with open(f'results.pkl', 'wb') as file:
+    pickle.dump((train_loss_list, test_loss_list, accuracy_list), file)
