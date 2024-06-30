@@ -48,7 +48,8 @@ with tqdm(range(args.rounds)) as global_bar:
         # evaluation
         train_loss = np.mean(local_loss)
         test_loss, accuracy = evaluate(global_model, test_dataset, args.device)
-        printout = f'Global Round: {epoch}\n'\
+        printout = \
+            f'Global Round: {epoch + 1}\n'\
             f'accuracy: {accuracy * 100}% \n'\
             f'train_loss: {train_loss} \n'\
             f'test_loss: {test_loss}'

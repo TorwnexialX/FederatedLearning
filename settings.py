@@ -13,7 +13,7 @@ def args_parser():
                         help="number of clients (constant: 100)")
     parser.add_argument('--C', type=float, default=0.1,
                         help="the fraction of clients that perform computation on each round")
-    parser.add_argument('--lr', type=float, default=0.001,
+    parser.add_argument('--lr', type=float, default=0.01,
                         help="learning rate")
     
     parser.add_argument('--if_iid', type=bool, default=False,

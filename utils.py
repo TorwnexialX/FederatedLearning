@@ -12,14 +12,14 @@ def get_dataset(if_iid:bool):
     :return train_dataset: MNIST training dataset. 
     :return test_dataset: MNIST test dataset. 
     """
-    data_dir = '/data/'
+    data_dir = 'data/'
     num_clients = 100
+    transform = transforms.Compose([transforms.ToTensor(),
+                                    transforms.Normalize((0.5, 0.5, 0.5), (0.5, 0.5, 0.5))])
 
-    train_dataset = datasets.MNIST(data_dir, train=True, download=True,
-                                    transform=transforms.ToTensor())
+    train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transform)
 
-    test_dataset  = datasets.MNIST(data_dir, train=False, download=True,
-                                    transform=transforms.ToTensor())
+    test_dataset  = datasets.MNIST(data_dir, train=False, download=True, transform=transform)
 
     if if_iid == True:
         # shuffle 60,000 training images
@@ -70,11 +70,9 @@ class Client:
         
         model.load_state_dict(self.global_model.state_dict())
         # optimizer customization
-        optimizer = torch.optim.Adam(model.parameters(), lr=self.lr, weight_decay=1e-4)
+        optimizer = torch.optim.SGD(model.parameters(), lr=self.lr, momentum=0.5)
         model.train()
-        epoch_loss = []
         for epoch in range(self.E):
-            total_loss = 0.0
             for features, labels in trainloader:
                 features, labels = features.to(self.device), labels.to(self.device)
                 model.zero_grad()
@@ -82,39 +80,8 @@ class Client:
                 loss = criterion(outputs, labels)
                 loss.backward()
                 optimizer.step()
-                total_loss += loss.item() # loss.item() is the averaged loss of each minibatch
-            epoch_loss.append(total_loss / batch_num)
 
-        return model.state_dict(), epoch_loss[-1]
-
-def split_state_dict(state_dict):
-    """
-    :param state_dict: state_dict of a model
-    :return weights_tensor: 2D-tensor of weights in each layer
-    :return biases_tensor: 2D-tensor of biases in each layer
-    """
-    params = list(state_dict.values())
-    weights_list = []
-    biases_list = []
-    for i, value in enumerate(params):
-        if i % 2 == 0:
-            weights_list.append(value)
-        else:
-            biases_list.append(value)
-    weights_tensor = torch.stack(weights_list)
-    biases_tensor = torch.stack(biases_list)
-    return weights_tensor, biases_tensor
-
-# def param_average(dict_list):
-#     new_dict = copy.deepcopy(dict_list[0])
-#     list_len = len(dict_list)
-#     for key in new_dict.keys():
-#         value = torch.zeros(new_dict[key].shape, device=new_dict[key].device)
-#         for i in range(list_len):
-#             value += dict_list[i][key]
-#         value /= list_len
-#         new_dict[key] = value
-#     return new_dict
+        return model.state_dict(), loss.item()
 
 def param_average(dict_list):
     # Initialize the new dictionary with the same structure as the input dictionaries
