@@ -35,25 +35,25 @@ Three kinds of algorithms are mentioned in the paper, including basic optimizati
 ***SGD***
 
 It is conducted on a single node, and its parameters are updated after every gradient is calculated. 
-$$
+``` math
 \theta_{t+1} \leftarrow \theta_t - \eta \nabla L(\theta_t)
-$$
+```
 where $\eta$ is the learning rate, and $\nabla L(\theta)$ is the gradient of the loss function $L(\theta)$ with respect to the parameters $\theta$, $\theta_t$ marks the value of parameter $\theta$ at time $t$. 
 
 ***FedSGD***
 
 It is conducted on all clients in parallel, update parameters to the server after every gradient is calculated. 
-$$
-\theta_{t+1} \leftarrow \theta_t - \eta \frac{1}{K} \sum_{k=1}^{K} \nabla L_k(\theta_t)\\
-$$
+``` math
+\theta_{t+1} \leftarrow \theta_t - \eta \frac{1}{K} \sum_{k=1}^{K} \nabla L_k(\theta_t)\\ 
+```
 where $K$ is the number of clients, and $\nabla L_k(\theta)$ is the gradient from the $k$-th client.
 
 ***FedAvg***
 
 It is conducted on selected clients in parallel, update parameters to the server after $E$ epochs of training is performed locally. 
-$$
+``` math
 \theta_{t+1} \leftarrow \sum_{k=1}^{K} \frac{n_k}{N} \theta^{(k)}_t
-$$
+```
 where $\theta^{(k)}$ is the parameters collected from the $k$-th client, $n_k$ is the number of data points on the $k$-th client, and $N$ is the total number of data points across all clients.
 
 ## Conclusion It Draws
