@@ -20,7 +20,8 @@ def get_dataset(if_iid:bool, num_clients):
     data_dir = 'data/'
     num_clients = int(num_clients)
 
-    # introduce negative numbers through normalization
+    # Introduce negative numbers through normalization, 
+    # which has been experimentally proven to improve accuracy in a limited number of rounds.
     transform = transforms.Compose([transforms.ToTensor(), transforms.Normalize((0.5), (0.5))])
 
     train_dataset = datasets.MNIST(data_dir, train=True, download=True, transform=transform)
@@ -133,6 +134,7 @@ def evaluate(global_model, global_testset, device):
     criterion = torch.nn.CrossEntropyLoss()
     total_loss = 0.0
     correct = 0
+    total = 0
     
     with torch.no_grad():
         for features, labels in testloader:
@@ -146,9 +148,10 @@ def evaluate(global_model, global_testset, device):
             # count the correct prediction in the current batch
             _, predicted = torch.max(outputs.data, 1)
             correct += (predicted == labels).sum().item()
+            total += labels.size(0)
     
     # calculate average loss and accuracy
     avg_loss = total_loss / len(testloader)
-    accuracy = correct / len(testloader)
+    accuracy = correct / total
     
     return avg_loss, accuracy

@@ -3,7 +3,7 @@ import argparse
 def args_parser():
     parser = argparse.ArgumentParser()
 
-    parser.add_argument('--rounds', type=int, default=1000,
+    parser.add_argument('--rounds', type=int, default=50,
                         help="number of coummunication rounds")
     parser.add_argument('--E', type=int, default=10,
                         help="number of local epochs")
@@ -16,9 +16,9 @@ def args_parser():
     parser.add_argument('--lr', type=float, default=0.01,
                         help="learning rate")
     
-    parser.add_argument('--if_iid', type=bool, default=False,
+    parser.add_argument('--if_iid', type=bool, default=True,
                         help="whther training set will be I.I.D.")
-    parser.add_argument('--device', type=str, default="cuda", choices=["cuda", "cpu"], 
+    parser.add_argument('--device', type=str, default="cpu", choices=["cuda", "cpu"], 
                         help="conduct the training on \"cuda \" or \"cpu\"")
     
     args = parser.parse_args()

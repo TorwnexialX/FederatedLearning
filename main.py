@@ -1,6 +1,7 @@
 from tqdm import tqdm
 import random
 import pickle
+from datetime import datetime
 from utils import *
 from models import *
 from settings import *
@@ -66,6 +67,10 @@ with tqdm(range(args.rounds)) as global_bar:
             f'train_loss: {train_loss} \n'\
             f'test_loss: {test_loss}'
         global_bar.write(printout)
-    
-with open(f'results.pkl', 'wb') as file:
+
+
+now = datetime.now()
+formatted_date_time = now.strftime("_%Y-%m-%d_%H-%M-%S")
+
+with open(f'results/pkls/results{formatted_date_time}.pkl', 'wb') as file:
     pickle.dump((train_loss_list, test_loss_list, accuracy_list), file)

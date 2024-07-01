@@ -2,7 +2,10 @@
 LOG.md
 
 # dataset
-data/
+data/MNIST/raw
+
+# results
+*.pkl
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
