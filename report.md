@@ -5,15 +5,15 @@
 ## Problem It Deals With
 The paper introduces federated learning that allows models to be trained on decentralized data located on mobile devices, which saves communication cost and protect personal privacy. The learning process is mainly achieved by algorithm called ***FederatedAveraging***, denoted as ***FedAvg*** in the following report. The algorithm enables models to be trained locally and performs well on real-world data, which is validated with image recognition and text prediction tasks. 
 
-#### Strengths It Has
+## Strengths It Has
 1. **Privacy Preservation**: Federated learning only updates parameters to the central server and keeps training data on clients, thus protecting data privacy. 
 2. **Efficiency in Communication**: The proposed ***FedAvg*** algorithm reduces the communication cost significantly, making it feasible to train deep networks on decentralized data with limited bandwidth.
 3. **Robustness to Data Variability**: The algorithm is designed to handle non-IID and unbalanced data, which is closer to real-world scenarios where data distribution across devices varies widely.
 
-#### Method It Provides
+## Method It Provides
 ***FedAvg*** steps + comparison between 3
 
-##### ***FedAvg*** Steps (Show by PPT illustration)
+### ***FedAvg*** Steps (Show by PPT illustration)
 
 1. **Initialization**:
    - A global model is initialized on a central server.
