@@ -11,7 +11,6 @@ The paper introduces federated learning that allows models to be trained on dece
 3. **Robustness to Data Variability**: The algorithm is designed to handle non-IID and unbalanced data, which is closer to real-world scenarios where data distribution across devices varies widely.
 
 ## Method It Provides
-***FedAvg*** steps + comparison between 3
 
 ### ***FedAvg*** Steps (Show by PPT illustration)
 
