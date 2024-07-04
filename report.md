@@ -12,7 +12,7 @@ The paper introduces federated learning that allows models to be trained on dece
 
 ## Method It Provides
 
-### ***FedAvg*** Steps (Show by PPT illustration)
+### ***FedAvg*** Steps
 
 1. **Initialization**:
    - A global model is initialized on a central server.
